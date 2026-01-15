@@ -127,4 +127,5 @@ cursor.executemany('INSERT INTO items (category, name, is_stopped) VALUES (?, ?,
 
 conn.commit()
 conn.close()
-print("✅ База данных создана!")
+
+print("База данных создана")
