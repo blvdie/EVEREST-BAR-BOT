@@ -7,11 +7,10 @@ from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQu
 BOT_TOKEN = "8470106768:AAFtDu1bfpsY7DJnnZq8wT43v7nkgLhv0t4"
 DB_PATH = "menu.db"
 
-# Твой Telegram ID
 ADMIN_IDS = {
-    946820627,  # я
-    825303517,  # саша
-    6885937626, # второй бармен
+    946820627,  
+    825303517, 
+    6885937626,
 }
 
 logging.basicConfig(level=logging.INFO)
@@ -19,13 +18,11 @@ logging.basicConfig(level=logging.INFO)
 def is_admin(user):
     return user.id in ADMIN_IDS
 
-# === Функция сохранения пользователей ===
 async def save_user(context: ContextTypes.DEFAULT_TYPE, user_id: int):
     if 'active_users' not in context.bot_data:
         context.bot_data['active_users'] = set()
     context.bot_data['active_users'].add(user_id)
 
-# === Работа с базой данных ===
 def get_categories():
     if not os.path.exists(DB_PATH):
         return []
@@ -76,7 +73,6 @@ def action_keyboard():
         [KeyboardButton("Назад к категориям")]
     ], resize_keyboard=True)
 
-# === НОВАЯ ФУНКЦИЯ: Показ реального стоп-листа ===
 async def show_stoplist(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await save_user(context, update.effective_user.id)
     conn = sqlite3.connect(DB_PATH)
@@ -86,31 +82,28 @@ async def show_stoplist(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
 
     if not stopped_items:
-        await update.message.reply_text("✅ Стоп-лист пуст.")
+        await update.message.reply_text("Стоп-лист пуст")
         await update.message.reply_text("Выберите действие:", reply_markup=main_keyboard())
         return
 
-    # Группируем по категориям
     categories = {}
     for cat, name in stopped_items:
         if cat not in categories:
             categories[cat] = []
         categories[cat].append(name)
 
-    # Формируем сообщение
     lines = []
     for cat in sorted(categories.keys()):
         lines.append(f"---{cat}---")
         for name in categories[cat]:
             lines.append(name)
-        lines.append("")  # пустая строка между категориями
+        lines.append("")  
 
     response = "\n".join(lines).strip()
 
     await update.message.reply_text(response)
     await update.message.reply_text("Выберите действие:", reply_markup=main_keyboard())
 
-# === Обработчики ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await save_user(context, update.effective_user.id)
     text = 'Привет! Это бот для помощи официантам “Эверест” по барному меню'
@@ -120,7 +113,7 @@ async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await save_user(context, update.effective_user.id)
     categories = get_categories()
     if not categories:
-        await update.message.reply_text("❌ Меню пусто.")
+        await update.message.reply_text("Меню пусто")
         return
 
     buttons = [[InlineKeyboardButton(cat, callback_data=f"cat_{cat}")] for cat in categories]
@@ -159,7 +152,6 @@ async def notify_all_non_admins(context: ContextTypes.DEFAULT_TYPE, item_name: s
         except Exception:
             context.bot_data['active_users'].discard(user_id)
 
-# === Отображение категории ===
 async def category_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await save_user(context, update.effective_user.id)
     query = update.callback_query
@@ -181,21 +173,20 @@ async def category_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await query.message.reply_text("Выберите действие:", reply_markup=non_admin_category_keyboard())
 
-# === Админка ===
 async def manage_availability_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await save_user(context, update.effective_user.id)
     if not is_admin(update.effective_user):
-        await update.message.reply_text("❌ Доступ запрещён.")
+        await update.message.reply_text("Доступ запрещён")
         return
 
     category = context.chat_data.get('current_category')
     if not category:
-        await update.message.reply_text("❌ Не выбрана категория.")
+        await update.message.reply_text("Не выбрана категория")
         return
 
     items = get_items_by_category(category)
     if not items:
-        await update.message.reply_text("❌ В категории нет позиций.")
+        await update.message.reply_text("В категории нет позиций")
         return
 
     buttons = [[InlineKeyboardButton(
@@ -216,7 +207,7 @@ async def item_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         item_id = int(query.data.replace("item_", ""))
     except ValueError:
-        await query.message.reply_text("❌ Неверный формат данных.")
+        await query.message.reply_text("Неверный формат данных")
         return
 
     conn = sqlite3.connect(DB_PATH)
@@ -226,7 +217,7 @@ async def item_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.close()
 
     if not row:
-        await query.message.reply_text("❌ Позиция не найдена.")
+        await query.message.reply_text("Позиция не найдена")
         return
 
     item_name = row[0]
@@ -237,7 +228,7 @@ async def item_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def action_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await save_user(context, update.effective_user.id)
     if not is_admin(update.effective_user):
-        await update.message.reply_text("❌ Доступ запрещён.")
+        await update.message.reply_text("Доступ запрещён")
         return
 
     action = update.message.text
@@ -249,7 +240,7 @@ async def action_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if not item_name or not category:
-        await update.message.reply_text("❌ Ошибка: не выбрана позиция.")
+        await update.message.reply_text("Ошибка: не выбрана позиция")
         return
 
     if action == "Стоп-лист":
@@ -266,12 +257,10 @@ async def action_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text("Выберите действие:", reply_markup=admin_category_keyboard())
 
-# === Обработка "Назад" для не-админов ===
 async def back_from_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await save_user(context, update.effective_user.id)
     await back_to_categories(update, context)
 
-# === Запуск ===
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
@@ -285,8 +274,9 @@ def main():
     app.add_handler(CallbackQueryHandler(category_callback, pattern=r"^cat_"))
     app.add_handler(CallbackQueryHandler(item_selected, pattern=r"^item_"))
 
-    print("✅ Бот запущен!")
+    print("Бот запущен")
     app.run_polling()
 
 if __name__ == "__main__":
+
     main()
