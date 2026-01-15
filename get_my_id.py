@@ -8,7 +8,7 @@ BOT_TOKEN = "8470106768:AAFtDu1bfpsY7DJnnZq8wT43v7nkgLhv0t4"
 async def show_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     msg = (
-        f"👤 Ваш профиль:\n"
+        f"Профиль:\n"
         f"ID: <code>{user.id}</code>\n"
         f"Имя: {user.first_name}\n"
         f"Username: @{user.username if user.username else 'не задан'}"
@@ -22,4 +22,5 @@ def main():
     app.run_polling()
 
 if __name__ == "__main__":
+
     main()
