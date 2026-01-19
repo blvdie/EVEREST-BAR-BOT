@@ -11,6 +11,7 @@ ADMIN_IDS = {
     946820627,  
     825303517, 
     6885937626,
+    858482303,
 }
 
 logging.basicConfig(level=logging.INFO)
@@ -280,3 +281,4 @@ def main():
 if __name__ == "__main__":
 
     main()
+
